@@ -1,29 +1,20 @@
-FROM debian:bullseye-slim
+# Use the official Node.js image as the base image
+FROM node:14
 
-# Install basic dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
-    curl \
-    git \
-    ca-certificates \
-    apt-transport-https \
-    gpg
+# Set the working directory inside the container
+WORKDIR /app
 
-# Add Microsoft GPG key
-RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && \
-    install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/ && \
-    rm microsoft.gpg
+# Clone Uptime Kuma from the GitHub repository
+RUN git clone https://github.com/louislam/uptime-kuma.git .
 
-# Add Visual Studio Code repository
-RUN echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list
+# Install dependencies
+RUN npm install
 
-# Install Visual Studio Code
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    code \
-    && rm -rf /var/lib/apt/lists/*
+# Build the Uptime Kuma application
+RUN npm run build
 
-EXPOSE 8080
-EXPOSE 443
-# Start Visual Studio Code as root
-CMD ["code", "--no-sandbox", "--user-data-dir=/root"]
+# Expose port 3001
+EXPOSE 3001
 
+# Start Uptime Kuma
+CMD ["node", "server/server.js"]
